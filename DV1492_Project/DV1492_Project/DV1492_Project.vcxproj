@@ -116,7 +116,6 @@
     <ClCompile Include="HelpFiles\filesystem.cpp" />
     <ClCompile Include="HelpFiles\memblockdevice.cpp" />
     <ClCompile Include="HelpFiles\shell.cpp" />
-    <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="HelpFiles\block.h" />
