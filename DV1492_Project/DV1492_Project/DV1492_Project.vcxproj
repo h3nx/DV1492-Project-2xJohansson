@@ -111,7 +111,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="HelpFiles\block.cpp" />
+    <ClCompile Include="HelpFiles\blockdevice.cpp" />
+    <ClCompile Include="HelpFiles\filesystem.cpp" />
+    <ClCompile Include="HelpFiles\memblockdevice.cpp" />
+    <ClCompile Include="HelpFiles\shell.cpp" />
     <ClCompile Include="Source.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="HelpFiles\block.h" />
+    <ClInclude Include="HelpFiles\blockdevice.h" />
+    <ClInclude Include="HelpFiles\filesystem.h" />
+    <ClInclude Include="HelpFiles\memblockdevice.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
