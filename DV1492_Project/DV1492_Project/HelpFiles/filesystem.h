@@ -3,11 +3,57 @@
 
 #include "memblockdevice.h"
 
+#define NAME_SIZE 64
+//#define FILE_DATA_SIZE (512 - NAME_SIZE)
+
 class FileSystem
 {
 private:
-    MemBlockDevice mMemblockDevice;
     // Here you can add your own data structures
+	
+	struct Attributes {		
+		char owner[NAME_SIZE];
+		unsigned int curSize;
+		unsigned int maxSize;
+	};//64+8+8 = 80
+	
+	struct File {					//BYTE SIZE
+		char name[NAME_SIZE];				//64
+		unsigned int blockId;		//8
+		Attributes atts;			//80
+		char data[368];				//360 (remaining in block)
+		
+		//File* link;//8 (behövs om filen ska vara flera block)
+	};
+
+	struct Folder {		
+		char name[NAME_SIZE];				//64
+		unsigned int blockId;		//8
+		//Folder* parent;				//8
+		unsigned int parent;		//8
+		//Folder* link;				//8
+		unsigned int link;		//8
+
+		//File** files;				//nrOfFiles * 8
+		unsigned int *files;
+		unsigned int nrOfFiles;		//4
+		//Folder** folders;			//nrOfFolders * 8
+		unsigned int *folders;
+		unsigned int nrOfFolders;	//4
+
+		Folder() : name(), 
+			blockId(0),
+			parent(0), 
+			link(0), 
+			files(nullptr), 
+			nrOfFiles(0), 
+			folders(nullptr), 
+			nrOfFolders(0){}
+		~Folder() {	delete files; delete folders; }
+					
+	};
+
+
 public:
     FileSystem();
     ~FileSystem();
@@ -20,7 +66,7 @@ public:
     // createFile(...)
 
     /* Creates a folder in the filesystem */
-    // createFolderi(...);
+    int createFolder(char name[NAME_SIZE], std::string location);
 
     /* Removes a file in the filesystem */
     // removeFile(...);
@@ -35,6 +81,17 @@ public:
     // listDir(...);
 
     /* Add your own member-functions if needed */
+private:
+	void initRoot();
+	int findBlock(std::string location);
+	std::string toString(Folder item);
+	std::string toString(File item);
+	void readFolderBlock(std::string block, Folder *folder);
+	void readFileBlock(std::string block, File *file);
+
+private:
+	MemBlockDevice mMemblockDevice;	
+	bool block_map[250];
 };
 
 #endif // FILESYSTEM_H
