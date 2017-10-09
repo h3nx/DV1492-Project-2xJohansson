@@ -19,17 +19,17 @@ std::string help();
 /* More functions ... */
 
 std::string format();
-std::string ls();
-std::string create();
-std::string cat();
-std::string createImage();
-std::string restoreImage();
-std::string rm();
-std::string cp();
-std::string append();
-std::string mv();
-std::string mkDir();
-std::string cd();
+std::string ls(std::string path);
+std::string create(std::string path);
+std::string cat(std::string path);
+std::string createImage(std::string path);
+std::string restoreImage(std::string path);
+std::string rm(std::string path);
+std::string cp(std::string source, std::string destination);
+std::string append(std::string source, std::string destination);
+std::string mv(std::string oldFile, std::string newFile);
+std::string mkDir(std::string directory);
+std::string cd(std::string directory);
 std::string pwd();
 
 
@@ -63,22 +63,22 @@ int main(void) {
                 std::cout << "Listing directory" << std::endl;
                 break;
             case 3: // create
-				std::cout << create() << std::endl;
+				std::cout << create(commandArr[1]) << std::endl;
                 break;
             case 4: // cat
-				std::cout << cat() << std::endl;
+				std::cout << cat(commandArr[1]) << std::endl;
                 break;
             case 5: // createImage
-				std::cout << createImage() << std::endl;
+				std::cout << createImage(commandArr[1]) << std::endl;
                 break;
             case 6: // restoreImage
-				std::cout << restoreImage() << std::endl;
+				std::cout << restoreImage(commandArr[1]) << std::endl;
                 break;
             case 7: // rm
-				std::cout << rm() << std::endl;
+				std::cout << rm(commandArr[1]) << std::endl;
                 break;
             case 8: // cp
-				std::cout << cp() << std::endl;
+				std::cout << cp(commandArr[1], commandArr[2]) << std::endl;
                 break;
             case 9: // append
 				//std::cout << append() << std::endl;
@@ -90,8 +90,10 @@ int main(void) {
 
                 break;
             case 12: // cd
+				std::cout << cd(commandArr[1]) << std::endl;
                 break;
             case 13: // pwd
+				std::cout << pwd() << std::endl;
                 break;
             case 14: // help
                 std::cout << help() << std::endl;
@@ -131,7 +133,6 @@ bool quit() {
 	std::cout << "Exiting\n";
 	return false;
 }
-
 std::string help() {
     std::string helpStr;
     helpStr += "OSD Disk Tool .oO Help Screen Oo.\n";
@@ -153,73 +154,89 @@ std::string help() {
     helpStr += "* help:                             Prints this help screen\n";
     return helpStr;
 }
+/* Insert code for your shell functions and call them from the switch-case */
 
 std::string format()
 {
-	return std::string();
-}
+	std::string response = "Disk formatted";
 
-std::string ls()
+	return response;
+}
+std::string ls(std::string path)
 {
-	return std::string();
-}
+	std::string response = "";
 
-std::string create()
+	return response;
+}
+std::string create(std::string path)
 {
-	return std::string();
-}
+	std::string response = "";
 
-std::string cat()
+	return response;
+}
+std::string cat(std::string path)
 {
-	return std::string();
-}
+	std::string response = "";
 
-std::string createImage()
+	return response;
+}
+std::string createImage(std::string path)
 {
-	return std::string();
-}
+	std::string response = "";
 
-std::string restoreImage()
+	return response;
+}
+std::string restoreImage(std::string path)
 {
-	return std::string();
-}
+	std::string response = "";
 
-std::string rm()
+	return response;
+}
+std::string rm(std::string path)
 {
-	return std::string();
-}
+	std::string response = "";
 
-std::string cp()
+	return response;
+}
+std::string cp(std::string source, std::string destination)
 {
-	return std::string();
-}
+	std::string response = "";
 
-std::string append()
+	return response;
+}
+std::string append(std::string source, std::string destination)
 {
-	return std::string();
-}
+	std::string response = "";
 
-std::string mv()
+	return response;
+}
+std::string mv(std::string oldFile, std::string newFile)
 {
-	return std::string();
-}
+	std::string response = "";
 
-std::string mkDir()
+	return response;
+}
+std::string mkDir(std::string directory)
 {
-	return std::string();
-}
+	std::string response = "";
 
-std::string cd()
+	return response;
+}
+std::string cd(std::string directory)
 {
-	return std::string();
-}
+	std::string response = "";
 
+	return response;
+}
 std::string pwd()
 {
-	return std::string();
+	std::string response = "";
+
+	return response;
 }
 
-/* Insert code for your shell functions and call them from the switch-case */
+
+
 
 
 

@@ -63,22 +63,22 @@ public:
     */
 
     /* This function creates a file in the filesystem */
-    // createFile(...)
+	std::string createFile(std::string path);
 
     /* Creates a folder in the filesystem */
     int createFolder(char name[NAME_SIZE], std::string location);
 
     /* Removes a file in the filesystem */
-    // removeFile(...);
+    std::string removeFile(std::string path);
 
     /* Removes a folder in the filesystem */
-    // removeFolder(...);
+    std::string removeFolder(std::string path);
 
     /* Function will move the current location to a specified location in the filesystem */
-    // goToFolder(...);
+    std::string goToFolder(std::string path);
 
     /* This function will get all the files and folders in the specified folder */
-    // listDir(...);
+    std::string listDir(std::string path);
 
     /* Add your own member-functions if needed */
 private:
