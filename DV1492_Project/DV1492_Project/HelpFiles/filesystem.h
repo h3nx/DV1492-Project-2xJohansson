@@ -18,21 +18,24 @@ private:
 	};//64+8+8 = 80
 	
 	struct File {					//BYTE SIZE
-		char name[NAME_SIZE];				//64
+		char name[NAME_SIZE];		//64
+		char filetype[16];
 		unsigned int blockId;		//8
 		Attributes atts;			//80
+		//File* link;//8 (behövs om filen ska vara flera block)
 		char data[368];				//360 (remaining in block)
 		
-		//File* link;//8 (behövs om filen ska vara flera block)
 	};
 
 	struct Folder {		
-		char name[NAME_SIZE];				//64
+		char name[NAME_SIZE];		//64
 		unsigned int blockId;		//8
-		//Folder* parent;				//8
+		//Folder* parent;			//8
 		unsigned int parent;		//8
 		//Folder* link;				//8
-		unsigned int link;		//8
+		unsigned int link;			//8
+
+		
 
 		//File** files;				//nrOfFiles * 8
 		unsigned int *files;

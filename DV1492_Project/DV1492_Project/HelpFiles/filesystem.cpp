@@ -23,13 +23,13 @@ void FileSystem::initRoot()
 	root.name[1] = 'o';
 	root.name[2] = 'o';
 	root.name[3] = 't';
+	root.name[4] = '\n';
 	root.blockId = 123;
 	root.parent = 0;
 	root.link = 0;
 	root.files = nullptr;
 	root.nrOfFiles = 0;
-	root.folders = nullptr;
-	root.nrOfFolders = 0;
+
 
 	mMemblockDevice.writeBlock(0, this->toString(root));
 }
