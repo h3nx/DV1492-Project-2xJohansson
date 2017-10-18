@@ -1,4 +1,5 @@
 #include "filesystem.h"
+#include <sstream>
 
 FileSystem::FileSystem() {
 	for (int i = 0; i < 250; i++) block_map[i] = 0;
@@ -10,26 +11,90 @@ FileSystem::~FileSystem() {
 
 }
 
-int FileSystem::createFolder(char name[NAME_SIZE], std::string location)
+std::string FileSystem::createFolder(std::string path)
 {
+	Entry newFolder;
+
+
+
+	std::string folderName, parentPath;
+	int c = path.length();
+	while (c >= 0) {
+		if (path[c] != '/') {
+			folderName += path[c];
+			c--;
+		}		
+		else {
+			folderName = path.substr(c + 1);
+			parentPath = path.substr(0, c);
+			break;
+		}
+	}
+	newFolder.name = folderName;
+	newFolder.parent = this->findBlock(parentPath);
 	
-	return 0;
+
+	int freeBlock = 0;
+	while (block_map[freeBlock]) {
+		freeBlock++;
+		if (freeBlock >= 250)
+			return "error: no space";
+	}
+	newFolder.blockId = freeBlock;
+	
+	newFolder.fileSize = 0;
+	newFolder.link = 0;
+	newFolder.accessRights = 0;
+	
+	std::string parent_str = mMemblockDevice.readBlock(newFolder.parent).toString();
+	Entry parent;
+	this->readBlock(parent_str, &parent);
+	parent.data = newFolder.blockId;
+	this->mMemblockDevice.writeBlock(newFolder.parent, this->toString(parent));
+	//
+	parent_str = mMemblockDevice.readBlock(newFolder.parent).toString();
+	//
+	if (mMemblockDevice.writeBlock(freeBlock, this->toString(newFolder)) == 1) {
+		this->block_map[freeBlock] = 1;
+		return std::string("folder created");
+	}
+	else
+		return std::string("error: failed writing disk");
 }
 
 std::string FileSystem::listDir(std::string path)
 {
-	//Entry entry;
-	//readBlock(this->mMemblockDevice.readBlock(0).toString(), &entry);
-	//
-	//std::string folders;
+	std::stringstream result;
+	//int blockId = this->findBlock(path);
+	int blockId = 0;
 
-	return std::string("");
+	std::string block = this->mMemblockDevice.readBlock(blockId).toString();
+
+	Entry entry;
+	this->readBlock(block, &entry);
+	
+	std::vector<int> ids; 
+	std::vector<std::string> names;
+	std::vector<bool> folder;
+	findContentFolder(entry.data, ids, names, folder);
+
+	std::string fr = "folder", fe = "file";
+	for (int i = 0; i < ids.size(); i++) {		
+		result << names[i] << ", ";
+		if(folder[i])
+			result << fr;
+		else
+			result << fe;
+		result << std::endl;
+	}
+
+	return result.str();
 }
 
 void FileSystem::initRoot()
 {
 	Entry root;
-	root.name = "/.\x3";
+	root.name = ".\x3";
 	root.blockId = 0;
 	root.folder = 1;
 	root.parent = 0;
@@ -45,24 +110,7 @@ void FileSystem::initRoot()
 }
 int FileSystem::findBlock(std::string location)
 {
-	Block current_block = mMemblockDevice.readBlock(0);
-	
-	unsigned int curBlockId = 0;
-	int i = 0;
-	std::string folder = "";
-	bool search = true;
-	bool foundLocation = false;
-
-	while (search) {
-		if (location[i] != '/' && i < location.length()) {
-			folder += location[i];
-		}
-		else {
-			
-
-		}
-	}
-	return curBlockId;
+	return 0;
 }
 
 std::string FileSystem::toString(Entry item){
@@ -104,51 +152,63 @@ std::string FileSystem::toString(DataBlock item) {
 	return "0";
 }
 
-void FileSystem::readBlock(std::string block, Entry *folder)
+void FileSystem::readBlock(std::string block, Entry *entry)
 {
 	char name[NAME_SIZE];
 	
 	//name
 	int i = 0;
-	folder->name = block.substr(0, NAME_SIZE);
+	entry->name = block.substr(0, NAME_SIZE);
 	i = NAME_SIZE;
 
 	//blockiD
 	std::string id;
-	folder->blockId = std::stoi(block.substr(i, 3));
+	entry->blockId = std::stoi(block.substr(i, 3));
 	i += 3;
 
 	//folder
 	id = block[i];
-	folder->folder = std::stoi(id);
+	entry->folder = std::stoi(id);
 	i++;
 		
 	//parent
-	folder->parent = std::stoi(block.substr(i, 3));
+	entry->parent = std::stoi(block.substr(i, 3));
 	i += 3;
 
 	//fileSize	
-	folder->fileSize = std::stoi(block.substr(i, 8));
+	entry->fileSize = std::stoi(block.substr(i, 8));
 	i += 8;
 
 	//link
-	folder->link = std::stoi(block.substr(i, 3));
+	entry->link = std::stoi(block.substr(i, 3));
 	i += 3;
 
 	//accessRights
 	id = block[i];
-	folder->accessRights = std::stoi(id);
+	entry->accessRights = std::stoi(id);
 	i++;
 
 	//data
-	folder->data = block.substr(i);
+	entry->data = block.substr(i);
 
 }
 
-
-
-/* Please insert your code */
-
+void FileSystem::findContentFolder(std::string data, std::vector<int> &ids, std::vector<std::string> &names, std::vector<bool> &folder)
+{
+	std::string tmpBlock;
+	int i = 0;
+	std::string id("null");
+	while (i < data.length() - 3) {
+		id = data.substr(i, 3);
+		if (id[0] == '\0')
+			break;
+		ids.push_back(std::stoi(id));
+		tmpBlock = this->mMemblockDevice.readBlock(std::stoi(id)).toString();
+		names.push_back(tmpBlock.substr(0, NAME_SIZE));
+		folder.push_back(std::stoi(tmpBlock.substr(NAME_SIZE)));
+		i += 3;
+	}
+}
 
 
 std::string FileSystem::load(std::string filePath)
@@ -193,6 +253,7 @@ std::string FileSystem::IdToStr(unsigned int id, unsigned int max_size)
 
 	return num;
 }
+
 
 
 

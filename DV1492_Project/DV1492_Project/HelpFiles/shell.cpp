@@ -63,7 +63,7 @@ int main(void) {
 				std::cout << format() << std::endl;
                 break;
             case 2: // ls
-                std::cout << "Listing directory" << std::endl;
+                std::cout << "Listing directory" << ls(currentDir) << std::endl;
                 break;
             case 3: // create
 				std::cout << create(commandArr[1]) << std::endl;
@@ -90,7 +90,7 @@ int main(void) {
 				//std::cout << mv() << std::endl;
                 break;
             case 11: // mkdir
-
+				std::cout << mkDir(commandArr[1]) << std::endl;
                 break;
             case 12: // cd
 				std::cout << cd(commandArr[1]) << std::endl;
@@ -167,10 +167,8 @@ std::string format()
 	return response;
 }
 std::string ls(std::string path)
-{
-	std::string response = "";
-
-	return response;
+{	
+	return mFileSys->listDir(path);
 }
 std::string create(std::string path)
 {
@@ -218,9 +216,7 @@ std::string mv(std::string oldFile, std::string newFile)
 }
 std::string mkDir(std::string directory)
 {
-	std::string response = "";
-
-	return response;
+	return mFileSys->createFolder(directory);	
 }
 std::string cd(std::string directory)
 {

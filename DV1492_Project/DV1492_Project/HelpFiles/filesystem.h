@@ -45,7 +45,7 @@ public:
 	std::string createFile(std::string path);
 
     /* Creates a folder in the filesystem */
-    int createFolder(char name[NAME_SIZE], std::string location);
+    std::string createFolder(std::string path);
 
     /* Removes a file in the filesystem */
     std::string removeFile(std::string path);
@@ -74,6 +74,7 @@ private:
 	std::string toString(DataBlock item);
 	void readBlock(std::string block, Entry *folder);
 	//void readFileBlock(std::string block, File *file);
+	void findContentFolder(std::string data, std::vector<int> &ids, std::vector<std::string> &names, std::vector<bool> &folder);
 
 private:
 	MemBlockDevice mMemblockDevice;	
