@@ -67,12 +67,12 @@ int FileSystem::findBlock(std::string location)
 
 std::string FileSystem::toString(Entry item){
 	std::string result;
-	int i = 0;
+	//int i = 0;
 		
 	//name			64
 	result += item.name;
 	for (int i = item.name.size(); i < NAME_SIZE; i++)
-		result += "0";
+		result += '\0';
 		 
 	//block id		3
 	result += IdToStr(item.blockId, 3);
@@ -93,11 +93,11 @@ std::string FileSystem::toString(Entry item){
 	result += std::to_string(item.accessRights);
 
 	//data
-	std::string fullData = item.data;
-	while (fullData.length() < 512 - result.length())
-		fullData = fullData + "\0";
-	result += fullData;
-	
+	result += item.data;	
+	int remaining = 512 - result.length();
+	for (int p = 0; p < remaining; p++)
+		result += '\0';
+
 	return result;
 }
 std::string FileSystem::toString(DataBlock item) {
@@ -145,8 +145,6 @@ void FileSystem::readBlock(std::string block, Entry *folder)
 
 }
 
-	
-}
 
 
 /* Please insert your code */
