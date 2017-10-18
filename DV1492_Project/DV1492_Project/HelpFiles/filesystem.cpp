@@ -16,15 +16,26 @@ int FileSystem::createFolder(char name[NAME_SIZE], std::string location)
 	return 0;
 }
 
+std::string FileSystem::listDir(std::string path)
+{
+	//Entry entry;
+	//readBlock(this->mMemblockDevice.readBlock(0).toString(), &entry);
+	//
+	//std::string folders;
+
+	return std::string("");
+}
+
 void FileSystem::initRoot()
 {
 	Entry root;
-	root.name = "/.\n";
+	root.name = "/.\x3";
 	root.blockId = 0;
 	root.folder = 1;
 	root.parent = 0;
 	root.fileSize = 0;
 	root.link = 0;
+	root.accessRights = 0;
 	root.data = "";
 
 	mMemblockDevice.writeBlock(0, this->toString(root));
@@ -52,29 +63,39 @@ int FileSystem::findBlock(std::string location)
 }
 
 std::string FileSystem::toString(Entry item){
-	std::string tmp;
+	std::string result;
 	int i = 0;
 		
-	//name		
-	tmp += item.name;
-	
-	//block id		
-	char num[3] = { 0, 0, 0 };
-	num[2] = (item.blockId % 100) % 10;
-	num[1] = ((item.blockId - num[2]) % 100) / 10;
-	num[0] = (item.blockId - num[2] - num[1]*10) / 100;
-	
-	for (int j = 0; j < 3; j++)
-		tmp.push_back(num[j]);
-	i += 3;
+	//name			64
+	result += item.name;
+	for (int i = item.name.size(); i < NAME_SIZE; i++)
+		result += "0";
+		 
+	//block id		3
+	result += IdToStr(item.blockId, 3);
 
-	//fill rest with 0 (temp)
-	while (i < 512) {
-		tmp.push_back('0');
-		i++;
-	}
+	//folder		1
+	result += std::to_string(item.folder);
+
+	//parent		3
+	result += IdToStr(item.parent, 3);
+
+	//fileSize		8
+	result += IdToStr(item.fileSize, 8);
+
+	//link			3
+	result += IdToStr(item.fileSize, 3);
+
+	//accessrights	1
+	result += std::to_string(item.accessRights);
+
+	//data
+	std::string fullData = item.data;
+	while (fullData.length() < 512 - result.length())
+		fullData = fullData + "\0";
+	result += fullData;
 	
-	return std::string(tmp.begin(), tmp.end());
+	return result;
 }
 std::string FileSystem::toString(DataBlock item) {
 	return "0";
@@ -83,21 +104,52 @@ std::string FileSystem::toString(DataBlock item) {
 void FileSystem::readBlock(std::string block, Entry *folder)
 {
 	char name[NAME_SIZE];
+	
+	//name
 	int i = 0;
-	
-	//get name
-	if (i < NAME_SIZE) {
-		folder->name[i] = block[i];
-		i++;
-	}
-	//get blockiD
-	for (int i = 0; i < 3; i++) {
-		std::string id = { block[i], block[i + 1], block[i + 2] };
-		std::string::size_type sz;
-		folder->blockId = std::stoi(id, &sz);
-	}
+	folder->name = block.substr(0, NAME_SIZE);
+	i = NAME_SIZE;
 
-	
+	//blockiD
+	std::string id;
+	folder->blockId = std::stoi(block.substr(i, 3));
+	i += 3;
+
+	//folder
+	id = block[i];
+	folder->folder = std::stoi(id);
+	i++;
+		
+	//parent
+	folder->parent = std::stoi(block.substr(i, 3));
+	i += 3;
+
+	//fileSize	
+	folder->fileSize = std::stoi(block.substr(i, 8));
+	i += 8;
+
+	//link
+	folder->link = std::stoi(block.substr(i, 3));
+	i += 3;
+
+	//accessRights
+	id = block[i];
+	folder->accessRights = std::stoi(id);
+	i++;
+
+	//data
+	folder->data = block.substr(i);
+
+}
+
+std::string FileSystem::IdToStr(unsigned int id, unsigned int max_size)
+{
+	std::string num = std::to_string(id);
+
+	while (num.length() < max_size)
+		num = "0" + num;
+
+	return num;
 }
 
 //void FileSystem::readFileBlock(std::string block, File *file)
