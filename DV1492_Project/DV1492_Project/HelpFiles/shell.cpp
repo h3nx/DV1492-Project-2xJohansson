@@ -184,11 +184,19 @@ std::string cat(std::string path)
 }
 std::string createImage(std::string path)
 {
+
+
 	return mFileSys->save(path);
 }
 std::string restoreImage(std::string path)
 {
-	return mFileSys->load(path);
+	std::string toRet = mFileSys->load(path);
+	if (toRet == "image Loaded")
+		return toRet + " from path: " + path;
+	else if (toRet == "incorrect path")
+		return toRet + path;
+	else
+		return toRet;
 }
 std::string rm(std::string path)
 {
