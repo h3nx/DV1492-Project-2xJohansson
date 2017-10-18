@@ -9,6 +9,10 @@ std::string availableCommands[NUMAVAILABLECOMMANDS] = {
     "quit","format","ls","create","cat","createImage","restoreImage",
     "rm","cp","append","mv","mkdir","cd","pwd","help"
 };
+FileSystem* mFileSys;
+
+
+
 
 /* Takes usercommand from input and returns number of commands, commands are stored in strArr[] */
 int parseCommandString(const std::string &userCommand, std::string strArr[]);
@@ -39,9 +43,8 @@ int main(void) {
 	std::string user = "Johansson@DV1492";    // Change this if you want another user to be displayed
 	std::string currentDir = "/";    // current directory, used for output
 
-	FileSystem mFileSys;
-
     bool bRun = true;
+	mFileSys = new FileSystem();
 
     do {
         std::cout << user << ":" << currentDir << "$ ";
@@ -159,7 +162,8 @@ std::string help() {
 std::string format()
 {
 	std::string response = "Disk formatted";
-
+	delete mFileSys;
+	mFileSys = new FileSystem();
 	return response;
 }
 std::string ls(std::string path)
@@ -182,15 +186,11 @@ std::string cat(std::string path)
 }
 std::string createImage(std::string path)
 {
-	std::string response = "";
-
-	return response;
+	return mFileSys->save(path);
 }
 std::string restoreImage(std::string path)
 {
-	std::string response = "";
-
-	return response;
+	return mFileSys->load(path);
 }
 std::string rm(std::string path)
 {

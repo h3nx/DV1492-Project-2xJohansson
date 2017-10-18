@@ -16,6 +16,7 @@ int FileSystem::createFolder(char name[NAME_SIZE], std::string location)
 	return 0;
 }
 
+
 void FileSystem::initRoot()
 {
 	Entry root;
@@ -27,7 +28,10 @@ void FileSystem::initRoot()
 	root.link = 0;
 	root.data = "";
 
-	mMemblockDevice.writeBlock(0, this->toString(root));
+
+
+	if (mMemblockDevice.writeBlock(0, this->toString(root)) == 1)
+		this->block_map[0] = 1;
 }
 int FileSystem::findBlock(std::string location)
 {
@@ -100,10 +104,44 @@ void FileSystem::readBlock(std::string block, Entry *folder)
 	
 }
 
-//void FileSystem::readFileBlock(std::string block, File *file)
-//{
-//
-//}
-
 
 /* Please insert your code */
+
+
+
+std::string FileSystem::load(std::string filePath)
+{
+	std::string toRet = "incorrect path";
+
+
+
+
+
+	return toRet;
+}
+std::string FileSystem::save(std::string filePath)
+{
+	std::string toRet = "Could not save to: " + filePath;
+	std::ofstream file(filePath);
+	
+	unsigned int blockToRead = 0;
+	if (file.is_open())
+		toRet = "saved to: " + filePath;
+	while (file.is_open() && blockToRead < 250)
+	{
+		if (this->block_map[blockToRead])
+		{
+			file << this->mMemblockDevice.readBlock(blockToRead).toString() << " wtf\n\n";
+		}
+		else
+		{
+			file << "0\n\n";
+		}
+		blockToRead++;
+	}
+	file.close();
+
+
+
+	return toRet;
+}

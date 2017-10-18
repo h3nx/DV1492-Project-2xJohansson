@@ -1,6 +1,7 @@
 #ifndef FILESYSTEM_H
 #define FILESYSTEM_H
 
+#include <fstream>
 #include "memblockdevice.h"
 
 #define NAME_SIZE 64
@@ -30,47 +31,7 @@ private:
 		int reserved;				//2
 		std::string data;			
 	};
-								
-	/*
 	
-	struct File {					//nr of chars used
-		char name[NAME_SIZE];		//64
-		unsigned int blockId;		//3
-		//Attributes atts;			//64
-		char data[368];				//360 (remaining in block)
-		
-		//File* link;//8 (behövs om filen ska vara flera block)
-	};
-
-	struct Folder {		
-		char name[NAME_SIZE];		//64
-		unsigned int blockId;		//3
-		
-		unsigned int parent;		//3
-		
-		unsigned int link;			//3
-
-		//unsigned int nrOfFolders;	//8
-		//unsigned int nrOfFiles;		//0
-		unsigned int itemIds[145];	//436/3 (remaining in block)
-
-
-		//unsigned int nrOfFolders;	//4
-		//unsigned int *folders;
-
-	/*	Folder() : name(),
-			blockId(0),
-			parent(0),
-			link(0),
-			nrOfFolders(0),
-			nrOfFiles(0),
-			itemIds() {}
-			//folders(nullptr), 
-			//nrOfFolders(0){}
-			~Folder() {	}
-	};
-	*/
-
 
 public:
     FileSystem();
@@ -99,6 +60,13 @@ public:
     std::string listDir(std::string path);
 
     /* Add your own member-functions if needed */
+
+
+	std::string load(std::string filePath);
+	std::string save(std::string filePath);
+
+
+
 private:
 	void initRoot();
 	int findBlock(std::string location);
