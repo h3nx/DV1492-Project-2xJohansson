@@ -29,18 +29,18 @@ std::string FileSystem::listDir(std::string path)
 void FileSystem::initRoot()
 {
 	Entry root;
-	root.name = "/.\x3";
+	root.name = "/..\x3";
 	root.blockId = 0;
 	root.folder = 1;
 	root.parent = 0;
 	root.fileSize = 0;
 	root.link = 0;
 	root.accessRights = 0;
-	root.data = "";
+	root.data = "aasdasdakjsda\nkjasdkfkas\nfasdkjfksakfjas\nkjfaksjdfkja\nskjdf\n";
 
 
-
-	if (mMemblockDevice.writeBlock(0, this->toString(root)) == 1)
+	std::string ddd = this->toString(root);
+	if (mMemblockDevice.writeBlock(0, ddd) == 1)
 		this->block_map[0] = 1;
 }
 int FileSystem::findBlock(std::string location)
@@ -153,37 +153,73 @@ void FileSystem::readBlock(std::string block, Entry *folder)
 
 std::string FileSystem::load(std::string filePath)
 {
-	std::string toRet = "incorrect path";
+	std::string toRet = "";
+	std::ifstream file(filePath);
+	unsigned int blockToWrite = 0;
+	std::string line = "";
+	std::string lastLine = "";
+	std::string toWrite = "";
+	if (file.is_open())
+	{
+		while (std::getline(file, line))
+		{
+			if (line == "\x3" && toWrite != "")
+			{
+				if (this->mMemblockDevice.writeBlock(blockToWrite, toWrite) != 1)
+					toRet += "block at " + std::to_string(blockToWrite) + " corrupted and were not loaded\n";
+				else
+					block_map[blockToWrite] = 1;
+				blockToWrite++;
+				toWrite = "";
+			}
+			else if (line == "0" && lastLine == "\x3")
+			{
+				blockToWrite++;
+				toWrite = "";
+			}
+			else
+			{
+				if(toWrite != "")
+					toWrite += line;
+			}
+				
+			lastLine = line;
+		}
+	}
+	else
+		return "incorrect path";
 
-
-
-
-
+	if (toRet == "")
+		return "image Loaded";
 	return toRet;
 }
 std::string FileSystem::save(std::string filePath)
 {
-	std::string toRet = "Could not save to: " + filePath;
+	std::string toRet = "Could not save";
 	std::ofstream file(filePath);
-	
 	unsigned int blockToRead = 0;
+
 	if (file.is_open())
-		toRet = "saved to: " + filePath;
+		toRet = "saved";
 	while (file.is_open() && blockToRead < 250)
 	{
 		if (this->block_map[blockToRead])
 		{
-			file << this->mMemblockDevice.readBlock(blockToRead).toString() << " wtf\n\n";
+			toRet = this->mMemblockDevice.readBlock(blockToRead).toString();
+			file << toRet << "\n";
 		}
 		else
-		{
-			file << "0\n\n";
+		{	
+			file << "0\n";
 		}
+		file << "\x3\n";
 		blockToRead++;
 	}
-	file.close();	
+	file.close();
 	return toRet;
 }
+
+
 std::string FileSystem::IdToStr(unsigned int id, unsigned int max_size)
 {
 	std::string num = std::to_string(id);
@@ -193,6 +229,3 @@ std::string FileSystem::IdToStr(unsigned int id, unsigned int max_size)
 
 	return num;
 }
-
-
-
