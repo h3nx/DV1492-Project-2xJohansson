@@ -4,6 +4,7 @@
 #include "memblockdevice.h"
 
 #define NAME_SIZE 64
+#define BLOCK_ID_SIZE 3
 //#define FILE_DATA_SIZE (512 - NAME_SIZE)
 
 class FileSystem
@@ -11,47 +12,64 @@ class FileSystem
 private:
     // Here you can add your own data structures
 	
-	struct Attributes {		
-		char owner[NAME_SIZE];
-		unsigned int curSize;
-		unsigned int maxSize;
-	};//64+8+8 = 80
+
+	struct Entry {					//nr of chars used
+		std::string name;			//64
+		unsigned int blockId;		//3
+		bool folder;				//1
+		unsigned int parent;		//3	
+		unsigned int fileSize;		//8
+		unsigned int link;			//3
+		unsigned int accessRights;	//1
+		std::string data;			//429 (remaining in block)
+	};
+
+	struct DataBlock {
+		unsigned int back;			//3
+		unsigned int next;			//3
+		int reserved;				//2
+		std::string data;			
+	};
+								
+	/*
 	
-	struct File {					//BYTE SIZE
-		char name[NAME_SIZE];				//64
-		unsigned int blockId;		//8
-		Attributes atts;			//80
+	struct File {					//nr of chars used
+		char name[NAME_SIZE];		//64
+		unsigned int blockId;		//3
+		//Attributes atts;			//64
 		char data[368];				//360 (remaining in block)
 		
 		//File* link;//8 (behövs om filen ska vara flera block)
 	};
 
 	struct Folder {		
-		char name[NAME_SIZE];				//64
-		unsigned int blockId;		//8
-		//Folder* parent;				//8
-		unsigned int parent;		//8
-		//Folder* link;				//8
-		unsigned int link;		//8
+		char name[NAME_SIZE];		//64
+		unsigned int blockId;		//3
+		
+		unsigned int parent;		//3
+		
+		unsigned int link;			//3
 
-		//File** files;				//nrOfFiles * 8
-		unsigned int *files;
-		unsigned int nrOfFiles;		//4
-		//Folder** folders;			//nrOfFolders * 8
-		unsigned int *folders;
-		unsigned int nrOfFolders;	//4
+		//unsigned int nrOfFolders;	//8
+		//unsigned int nrOfFiles;		//0
+		unsigned int itemIds[145];	//436/3 (remaining in block)
 
-		Folder() : name(), 
+
+		//unsigned int nrOfFolders;	//4
+		//unsigned int *folders;
+
+	/*	Folder() : name(),
 			blockId(0),
-			parent(0), 
-			link(0), 
-			files(nullptr), 
-			nrOfFiles(0), 
-			folders(nullptr), 
-			nrOfFolders(0){}
-		~Folder() {	delete files; delete folders; }
-					
+			parent(0),
+			link(0),
+			nrOfFolders(0),
+			nrOfFiles(0),
+			itemIds() {}
+			//folders(nullptr), 
+			//nrOfFolders(0){}
+			~Folder() {	}
 	};
+	*/
 
 
 public:
@@ -84,10 +102,10 @@ public:
 private:
 	void initRoot();
 	int findBlock(std::string location);
-	std::string toString(Folder item);
-	std::string toString(File item);
-	void readFolderBlock(std::string block, Folder *folder);
-	void readFileBlock(std::string block, File *file);
+	std::string toString(Entry item);
+	std::string toString(DataBlock item);
+	void readBlock(std::string block, Entry *folder);
+	//void readFileBlock(std::string block, File *file);
 
 private:
 	MemBlockDevice mMemblockDevice;	

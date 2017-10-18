@@ -18,18 +18,14 @@ int FileSystem::createFolder(char name[NAME_SIZE], std::string location)
 
 void FileSystem::initRoot()
 {
-	Folder root;
-	root.name[0] = 'r';
-	root.name[1] = 'o';
-	root.name[2] = 'o';
-	root.name[3] = 't';
-	root.blockId = 123;
+	Entry root;
+	root.name = "/.\n";
+	root.blockId = 0;
+	root.folder = 1;
 	root.parent = 0;
+	root.fileSize = 0;
 	root.link = 0;
-	root.files = nullptr;
-	root.nrOfFiles = 0;
-	root.folders = nullptr;
-	root.nrOfFolders = 0;
+	root.data = "";
 
 	mMemblockDevice.writeBlock(0, this->toString(root));
 }
@@ -55,16 +51,13 @@ int FileSystem::findBlock(std::string location)
 	return curBlockId;
 }
 
-std::string FileSystem::toString(Folder item){
-	std::vector<char> tmp;
+std::string FileSystem::toString(Entry item){
+	std::string tmp;
 	int i = 0;
 		
 	//name		
-	for (int j = 0; j < NAME_SIZE; j++) {
-		tmp.push_back(item.name[j]);
-		i++;
-	}
-
+	tmp += item.name;
+	
 	//block id		
 	char num[3] = { 0, 0, 0 };
 	num[2] = (item.blockId % 100) % 10;
@@ -83,11 +76,11 @@ std::string FileSystem::toString(Folder item){
 	
 	return std::string(tmp.begin(), tmp.end());
 }
-std::string FileSystem::toString(File item) {
+std::string FileSystem::toString(DataBlock item) {
 	return "0";
 }
 
-void FileSystem::readFolderBlock(std::string block, Folder *folder)
+void FileSystem::readBlock(std::string block, Entry *folder)
 {
 	char name[NAME_SIZE];
 	int i = 0;
@@ -107,10 +100,10 @@ void FileSystem::readFolderBlock(std::string block, Folder *folder)
 	
 }
 
-void FileSystem::readFileBlock(std::string block, File *file)
-{
-
-}
+//void FileSystem::readFileBlock(std::string block, File *file)
+//{
+//
+//}
 
 
 /* Please insert your code */
