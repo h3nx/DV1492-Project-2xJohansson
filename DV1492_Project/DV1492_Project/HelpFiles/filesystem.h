@@ -78,6 +78,8 @@ private:
 private:
 	MemBlockDevice mMemblockDevice;	
 	bool block_map[250];
+ 
+	std::string IdToStr(unsigned int id, unsigned int max_size);
 };
 
 #endif // FILESYSTEM_H
