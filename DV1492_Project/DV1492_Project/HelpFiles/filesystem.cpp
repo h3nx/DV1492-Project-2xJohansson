@@ -81,10 +81,12 @@ std::string FileSystem::listDir(std::string path)
 	std::string fr = "(folder)", fe = "(file)";
 	for (int i = 0; i < ids.size(); i++) {		
 		result << names[i] << "\t";
-				
-		int nrOfTabs = 3 - (names[i].length()/ 8) % 8;
-		for (int j = 0; j < nrOfTabs; j++)
-			result << "\t";		
+		
+		if (names[i].length() <= 32) {
+			int nrOfTabs = 3 - (names[i].length() / 8) % 8;
+			for (int j = 0; j < nrOfTabs; j++)
+				result << "\t";
+		}
 
 		if(folder[i])
 			result << fr;
