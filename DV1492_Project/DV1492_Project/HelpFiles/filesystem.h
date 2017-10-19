@@ -166,7 +166,7 @@ public:
     std::string removeFile(std::string path);
 
     /* Removes a folder in the filesystem */
-    std::string removeFolder(std::string path);
+	std::string removeFolder(std::string path);
 
     /* Function will move the current location to a specified location in the filesystem */
     std::string goToFolder(std::string path);
@@ -175,7 +175,8 @@ public:
     std::string listDir(std::string path);
 
     /* Add your own member-functions if needed */
-
+	std::string writeFile(std::string filePath, std::string text);
+	std::string readFile(std::string filePath);
 
 	std::string load(std::string filePath);
 	std::string save(std::string filePath);
@@ -185,9 +186,10 @@ public:
 private:
 	void initRoot();
 	int findBlock(std::string location);
-	std::string toString(Entry item);
-	std::string toString(DataBlock item);
 	void readBlock(std::string block, Entry *folder);
+	void findContentFolder(std::string data, std::vector<int> &ids, std::vector<std::string> &names, std::vector<bool> &folder, std::vector<int> &sizes);
+	std::string remove(std::string path);
+	std::string createEntry(std::string path, bool folder);
 	FileSystem::Entry readBlock(int block);
 	//void readFileBlock(std::string block, File *file);
 	void findContentFolder(std::string data, std::vector<int> &ids, std::vector<std::string> &names, std::vector<bool> &folder);

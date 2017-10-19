@@ -10,60 +10,32 @@ FileSystem::~FileSystem() {
 
 }
 
-std::string FileSystem::createFolder(std::string path)
+std::string FileSystem::createFile(std::string path)
 {
-	Entry newFolder;
-	
-	std::string folderName, parentPath;
-	int c = path.length();
-	while (c >= 0) {
-		if (path[c] != '/') {
-			folderName += path[c];
-			c--;
-		}		
-		else {
-			folderName = path.substr(c + 1);
-			parentPath = path.substr(0, c);
-			break;
-		}
-	}
-	newFolder.name = folderName;
-	newFolder.parent = this->findBlock(parentPath);
-	
-
-	int freeBlock = 0;
-	while (block_map[freeBlock]) {
-		freeBlock++;
-		if (freeBlock >= 250)
-			return "error: no space";
-	}
-	newFolder.blockId = freeBlock;
-	newFolder.folder = 1;
-	newFolder.fileSize = 0;
-	newFolder.link = 0;
-	newFolder.accessRights = 0;
-	
-	std::string parent_str = mMemblockDevice.readBlock(newFolder.parent).toString();
-	Entry parent;
-	this->readBlock(parent_str, &parent);
-	parent.data.append(this->IdToStr(newFolder.blockId, 3));
-	this->mMemblockDevice.writeBlock(newFolder.parent, this->toString(parent));
-	//testing
-	//parent_str = mMemblockDevice.readBlock(newFolder.parent).toString();
-	//this->readBlock(parent_str, &parent);
-
-	if (mMemblockDevice.writeBlock(freeBlock, this->toString(newFolder)) == 1) {
-		this->block_map[freeBlock] = 1;
-		return std::string("folder created");
-	}
-	else
-		return std::string("error: failed writing disk");
+	return this->createEntry(path, 0);
 }
+
+std::string FileSystem::createFolder(std::string path)
+{	
+	return this->createEntry(path, 1);
+}
+
+std::string FileSystem::removeFile(std::string path)
+{
+	//only tested for folders
+	return this->remove(path);
+}
+
+std::string FileSystem::removeFolder(std::string path)
+{
+	return this->remove(path);
+}
+
 
 std::string FileSystem::listDir(std::string path)
 {
 	std::stringstream result;
-	result << "Name:\t\t\t\tType:\n";
+	result << "Type:\t\tName:\t\t\t\tSize:\n";
 	//int blockId = this->findBlock(path);
 	int blockId = 0;
 
@@ -72,26 +44,24 @@ std::string FileSystem::listDir(std::string path)
 	Entry entry;
 	this->readBlock(block, &entry);
 	
-	std::vector<int> ids; 
+	std::vector<int> ids, sizes; 
 	std::vector<std::string> names;
 	std::vector<bool> folder;
-	findContentFolder(entry.data, ids, names, folder);
+	findContentFolder(entry.data, ids, names, folder, sizes);
 
-	std::string fr = "(folder)", fe = "(file)";
 	for (int i = 0; i < ids.size(); i++) {		
-		result << names[i] << "\t";
+		if(folder[i])
+			result << "FOLDER";
+		else
+			result << "FILE";
+		result << "\t\t" << names[i];
 		
-		if (names[i].length() <= 32) {
-			int nrOfTabs = 3 - (names[i].length() / 8) % 8;
+		if (names[i].length() <= 24) {
+			int nrOfTabs = 4 - (names[i].length() / 8) % 8;
 			for (int j = 0; j < nrOfTabs; j++)
 				result << "\t";
 		}
-
-		if(folder[i])
-			result << fr;
-		else
-			result << fe;
-		result << std::endl;
+		result << sizes[i] << "b" << std::endl;
 	}
 
 	return result.str();
@@ -243,6 +213,7 @@ int FileSystem::findBlock(std::string location)
 	return blockID;
 }
 
+/*
 std::string FileSystem::toString(Entry item){
 	std::string result;
 	//int i = 0;
@@ -281,7 +252,7 @@ std::string FileSystem::toString(Entry item){
 std::string FileSystem::toString(DataBlock item) {
 	return "0";
 }
-
+*/
 void FileSystem::readBlock(std::string block, Entry *entry)
 {
 	char name[NAME_SIZE];
@@ -345,7 +316,7 @@ FileSystem::Entry FileSystem::readBlock(int block)
 	return toRet;
 }
 
-void FileSystem::findContentFolder(std::string data, std::vector<int> &ids, std::vector<std::string> &names, std::vector<bool> &folder)
+void FileSystem::findContentFolder(std::string data, std::vector<int> &ids, std::vector<std::string> &names, std::vector<bool> &folder, std::vector<int> &sizes)
 {
 	std::string tmpBlock;
 	Entry tmpEntry;
@@ -360,10 +331,174 @@ void FileSystem::findContentFolder(std::string data, std::vector<int> &ids, std:
 		this->readBlock(tmpBlock, &tmpEntry);
 		names.push_back(tmpEntry.name);
 		folder.push_back(tmpEntry.folder);
+		sizes.push_back(tmpEntry.fileSize);
 		i += 3;
 	}
 }
 
+std::string FileSystem::remove(std::string path)
+{
+	int blockNr = this->findBlock(path);
+	if (blockNr == -1)
+		return std::string("file/folder not found");
+
+	//temp, remove when findBlock works
+	blockNr = 2;//
+
+	//find block to remove
+	std::string entry_str = mMemblockDevice.readBlock(blockNr).toString();
+	Entry to_remove;
+	this->readBlock(entry_str, &to_remove);
+
+	//if folder make sure it's empty
+	if (to_remove.folder) {
+		if (to_remove.data != "")
+			return std::string("can only remove folders if empty");
+	}
+
+	//data to overwrite old block with
+	std::string empty_str;
+	empty_str.resize(512);
+	std::fill(empty_str.begin(), empty_str.end(), '\0');
+
+	//overwrite old block
+	if (mMemblockDevice.writeBlock(blockNr, empty_str) == 1) {
+		block_map[blockNr] = 0;
+
+		//have to let parent know
+		std::string parent_str = mMemblockDevice.readBlock(to_remove.parent).toString();
+		Entry parent;
+		this->readBlock(parent_str, &parent);	//get parent
+
+		std::vector<int> data;
+		std::string id_str;
+		int i = 0;
+		while (i < parent.data.length()) {		//find our block
+			id_str = parent.data.substr(i, 3);
+			data.push_back(std::stoi(id_str));
+			i += 3;
+		}
+		for (int i = 0; i < data.size(); i++) {	//remove our block
+			if (to_remove.blockId == data[i]) {
+				data.erase(data.begin() + i);
+				i = data.size();
+			}
+		}
+		id_str = "";							//give back parent block
+		for (int i = 0; i < data.size(); i++)
+			id_str.append(this->IdToStr(data.at(i), 3));
+		parent.data = id_str;
+
+
+		if (mMemblockDevice.writeBlock(parent.blockId, parent.getString()) == 1) {
+			
+			if (to_remove.folder) 
+				return std::string("folder removed");
+			else
+				return std::string("file removed");
+		}
+		//eturn std::string("code error");
+	}
+	return std::string("failed");
+}
+
+std::string FileSystem::createEntry(std::string path, bool folder)
+{
+	Entry newEntry;
+
+	int freeBlock = 0;
+	while (block_map[freeBlock]) {
+		freeBlock++;
+		if (freeBlock >= 250)
+			return "error: no space on disk";
+	}
+	newEntry.blockId = freeBlock;
+
+
+	std::string entryName, parentPath;
+	int c = path.length();
+	while (c >= 0) {
+		if (path[c] != '/') {
+			entryName += path[c];
+			c--;
+		}
+		else {
+			entryName = path.substr(c + 1);
+			parentPath = path.substr(0, c);
+			break;
+		}
+	}
+	if (entryName.length() > NAME_SIZE)
+		return std::string("error: name too long, max=" + std::to_string(NAME_SIZE));
+	newEntry.name = entryName;
+
+	int parentId = this->findBlock(parentPath);
+	if (parentId == -1)
+		return std::string("directory not found");
+	newEntry.parent = parentId;
+
+	newEntry.folder = folder;
+	newEntry.fileSize = 0;
+	newEntry.link = 0;
+	newEntry.accessRights = 0;
+
+	std::string parent_str = mMemblockDevice.readBlock(newEntry.parent).toString();
+	Entry parent;
+	this->readBlock(parent_str, &parent);
+	parent.data.append(this->IdToStr(newEntry.blockId, 3));
+	this->mMemblockDevice.writeBlock(newEntry.parent, parent.getString());
+	//testing
+	//parent_str = mMemblockDevice.readBlock(newFolder.parent).toString();
+	//this->readBlock(parent_str, &parent);
+
+	if (mMemblockDevice.writeBlock(freeBlock, newEntry.getString()) == 1) {
+		this->block_map[freeBlock] = 1;
+		if (newEntry.folder)
+			return std::string("folder created");
+		else
+			return std::string("file created");
+	}
+	else
+		return std::string("error: failed writing disk");
+}
+
+std::string FileSystem::writeFile(std::string filePath, std::string text)
+{
+	int blockId = this->findBlock(filePath);
+	if (blockId == -1)
+		return std::string("file not found");
+
+	//test, remove when findBlock works
+	blockId = 2; //
+
+	std::string file_str = mMemblockDevice.readBlock(blockId).toString();
+	Entry file;
+	this->readBlock(file_str, &file);
+	file.data.resize(429);		//!!! 512 - attributes size
+	if (text.size() > file.data.capacity())
+		return ("not enough space on file");
+	
+	file.data = text;
+	if(mMemblockDevice.writeBlock(blockId, file.getString()) == 1)
+		return std::string("file written");
+	return std::string("failed writing to string");
+}
+
+std::string FileSystem::readFile(std::string filePath)
+{
+	int blockNr = this->findBlock(filePath);
+	if (blockNr == -1)
+		return std::string("file not found");
+
+	//temp, remove when findBlock workds
+	blockNr = 2; //
+
+	std::string file_str = mMemblockDevice.readBlock(blockNr).toString();
+	Entry file;
+	this->readBlock(file_str, &file);
+		
+	return file.data;
+}
 
 std::string FileSystem::load(std::string filePath)
 {
