@@ -1,6 +1,6 @@
 #include "filesystem.h"
 #include <sstream>
-
+#include <algorithm>
 FileSystem::FileSystem() {
 	for (int i = 0; i < 250; i++) block_map[i] = 0;
 
@@ -14,9 +14,7 @@ FileSystem::~FileSystem() {
 std::string FileSystem::createFolder(std::string path)
 {
 	Entry newFolder;
-
-
-
+	
 	std::string folderName, parentPath;
 	int c = path.length();
 	while (c >= 0) {
@@ -41,7 +39,7 @@ std::string FileSystem::createFolder(std::string path)
 			return "error: no space";
 	}
 	newFolder.blockId = freeBlock;
-	
+	newFolder.folder = 1;
 	newFolder.fileSize = 0;
 	newFolder.link = 0;
 	newFolder.accessRights = 0;
@@ -49,11 +47,12 @@ std::string FileSystem::createFolder(std::string path)
 	std::string parent_str = mMemblockDevice.readBlock(newFolder.parent).toString();
 	Entry parent;
 	this->readBlock(parent_str, &parent);
-	parent.data = newFolder.blockId;
+	parent.data.append(this->IdToStr(newFolder.blockId, 3));
 	this->mMemblockDevice.writeBlock(newFolder.parent, this->toString(parent));
-	//
-	parent_str = mMemblockDevice.readBlock(newFolder.parent).toString();
-	//
+	//testing
+	//parent_str = mMemblockDevice.readBlock(newFolder.parent).toString();
+	//this->readBlock(parent_str, &parent);
+
 	if (mMemblockDevice.writeBlock(freeBlock, this->toString(newFolder)) == 1) {
 		this->block_map[freeBlock] = 1;
 		return std::string("folder created");
@@ -65,6 +64,7 @@ std::string FileSystem::createFolder(std::string path)
 std::string FileSystem::listDir(std::string path)
 {
 	std::stringstream result;
+	result << "Name:\t\t\t\tType:\n";
 	//int blockId = this->findBlock(path);
 	int blockId = 0;
 
@@ -78,9 +78,14 @@ std::string FileSystem::listDir(std::string path)
 	std::vector<bool> folder;
 	findContentFolder(entry.data, ids, names, folder);
 
-	std::string fr = "folder", fe = "file";
+	std::string fr = "(folder)", fe = "(file)";
 	for (int i = 0; i < ids.size(); i++) {		
-		result << names[i] << ", ";
+		result << names[i] << "\t";
+				
+		int nrOfTabs = 3 - (names[i].length()/ 8) % 8;
+		for (int j = 0; j < nrOfTabs; j++)
+			result << "\t";		
+
 		if(folder[i])
 			result << fr;
 		else
@@ -101,7 +106,7 @@ void FileSystem::initRoot()
 	root.fileSize = 0;
 	root.link = 0;
 	root.accessRights = 0;
-	root.data = "aasdasdakjsda\nkjasdkfkas\nfasdkjfksakfjas\nkjfaksjdfkja\nskjdf\n";
+	root.data = "";
 
 
 	std::string ddd = this->toString(root);
@@ -155,10 +160,11 @@ std::string FileSystem::toString(DataBlock item) {
 void FileSystem::readBlock(std::string block, Entry *entry)
 {
 	char name[NAME_SIZE];
-	
+
 	//name
 	int i = 0;
 	entry->name = block.substr(0, NAME_SIZE);
+	entry->name.erase(std::remove(entry->name.begin(), entry->name.end(), '\0'), entry->name.end());
 	i = NAME_SIZE;
 
 	//blockiD
@@ -170,7 +176,7 @@ void FileSystem::readBlock(std::string block, Entry *entry)
 	id = block[i];
 	entry->folder = std::stoi(id);
 	i++;
-		
+
 	//parent
 	entry->parent = std::stoi(block.substr(i, 3));
 	i += 3;
@@ -190,22 +196,24 @@ void FileSystem::readBlock(std::string block, Entry *entry)
 
 	//data
 	entry->data = block.substr(i);
-
+	entry->data.erase(std::remove(entry->data.begin(), entry->data.end(), '\0'), entry->data.end());
 }
 
 void FileSystem::findContentFolder(std::string data, std::vector<int> &ids, std::vector<std::string> &names, std::vector<bool> &folder)
 {
 	std::string tmpBlock;
+	Entry tmpEntry;
 	int i = 0;
 	std::string id("null");
-	while (i < data.length() - 3) {
+	while (i <= data.length()) {
 		id = data.substr(i, 3);
 		if (id[0] == '\0')
 			break;
 		ids.push_back(std::stoi(id));
 		tmpBlock = this->mMemblockDevice.readBlock(std::stoi(id)).toString();
-		names.push_back(tmpBlock.substr(0, NAME_SIZE));
-		folder.push_back(std::stoi(tmpBlock.substr(NAME_SIZE)));
+		this->readBlock(tmpBlock, &tmpEntry);
+		names.push_back(tmpEntry.name);
+		folder.push_back(tmpEntry.folder);
 		i += 3;
 	}
 }
