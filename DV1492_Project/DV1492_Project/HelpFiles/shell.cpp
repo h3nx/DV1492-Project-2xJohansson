@@ -41,7 +41,7 @@ int main(void) {
 
 	std::string userCommand, commandArr[MAXCOMMANDS];
 	std::string user = "Johansson@DV1492";    // Change this if you want another user to be displayed
-	std::string currentDir = "/";    // current directory, used for output
+	std::string currentDir = "./";    // current directory, used for output
 	std::string text;
 
 
@@ -79,7 +79,7 @@ int main(void) {
 				std::cout << create(currentDir + commandArr[1], text) << std::endl;
                 break;
             case 4: // cat
-				std::cout << cat(commandArr[1]) << std::endl;
+				std::cout << cat(currentDir + commandArr[1]) << std::endl;
                 break;
             case 5: // createImage
 				std::cout << createImage(commandArr[1]) << std::endl;

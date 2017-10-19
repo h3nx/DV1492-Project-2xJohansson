@@ -70,18 +70,18 @@ std::string FileSystem::listDir(std::string path)
 void FileSystem::initRoot()
 {
 	Entry root;
-	root.name = ".\x3";
+	root.name = ".";
 	root.blockId = 0;
 	root.folder = 1;
 	root.parent = 0;
 	root.fileSize = 0;
 	root.link = 0;
 	root.accessRights = 0;
-	root.data = "001004";
+	root.data = "";
 
 	this->writeBlock(0, root.getString());
 
-	Entry folder;
+	/*Entry folder;
 	folder.name = "help\x3";
 	folder.blockId = 1;
 	folder.folder = 1;
@@ -150,7 +150,7 @@ void FileSystem::initRoot()
 	b5 = this->findBlock("./user/porn");
 	b6 = this->findBlock("./wat");
 	b7 = this->findBlock("./wat/wat/wat");
-	b8 = this->findBlock(".");
+	b8 = this->findBlock(".");*/
 	//DataBlock nn;
 	//nn.setString("00000200asdasdasdasdasdadasdasd");
 	//
@@ -174,12 +174,12 @@ int FileSystem::findBlock(std::string location)
 		int loc = location.find_first_of("/");
 		if (loc == -1)
 		{
-			path.push_back(location+"\x3");
+			path.push_back(location);
 			location = "";
 			break;
 		}
 		else
-			path.push_back(location.substr(0, loc)+"\x3");
+			path.push_back(location.substr(0, loc));
 		location = location.substr(loc + 1);
 	}
 
@@ -342,9 +342,6 @@ std::string FileSystem::remove(std::string path)
 	if (blockNr == -1)
 		return std::string("file/folder not found");
 
-	//temp, remove when findBlock works
-	blockNr = 2;//
-
 	//find block to remove
 	std::string entry_str = mMemblockDevice.readBlock(blockNr).toString();
 	Entry to_remove;
@@ -464,12 +461,22 @@ std::string FileSystem::createEntry(std::string path, bool folder)
 
 std::string FileSystem::writeFile(std::string filePath, std::string text)
 {
+	std::string parent;
+	int c = filePath.length();
+	while (c >= 0) {
+		if (filePath[c] != '/') {
+			parent += filePath[c];
+			c--;
+		}
+		else {
+			parent = filePath.substr(0, c);
+			c = -1;
+		}
+	}
+
 	int blockId = this->findBlock(filePath);
 	if (blockId == -1)
 		return std::string("file not found");
-
-	//test, remove when findBlock works
-	blockId = 2; //
 
 	std::string file_str = mMemblockDevice.readBlock(blockId).toString();
 	Entry file;
@@ -490,9 +497,7 @@ std::string FileSystem::readFile(std::string filePath)
 	if (blockNr == -1)
 		return std::string("file not found");
 
-	//temp, remove when findBlock workds
-	blockNr = 2; //
-
+	
 	std::string file_str = mMemblockDevice.readBlock(blockNr).toString();
 	Entry file;
 	this->readBlock(file_str, &file);

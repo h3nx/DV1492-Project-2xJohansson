@@ -18,7 +18,7 @@ private:
 	struct Entry;
 
 	struct Entry {					//nr of chars used
-		std::string name = "\x3";			//64
+		std::string name = "";			//64
 		unsigned int blockId = -1;		//3
 		bool folder = 0;				//1
 		unsigned int parent = 000;		//3	
