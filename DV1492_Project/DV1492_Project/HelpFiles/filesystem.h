@@ -23,13 +23,67 @@ private:
 		unsigned int link;			//3
 		unsigned int accessRights;	//1
 		std::string data;			//429 (remaining in block)
+		std::string getString()
+		{
+			std::string result = "";
+			std::string base = "00000000";
+			std::string tmp = "";
+			result += this->name;
+			for (int i = this->name.size(); i < NAME_SIZE; i++)
+				result += '\0';
+
+			tmp = base + std::to_string(this->blockId);
+			result += tmp.substr(tmp.size() - 3);
+
+			result += std::to_string(this->folder);
+
+			tmp = base + std::to_string(this->parent);
+			result += tmp.substr(tmp.size() - 3);
+
+			tmp = base + std::to_string(this->fileSize);
+			result += tmp.substr(tmp.size() - 8);
+
+			tmp = base + std::to_string(this->link);
+			result += tmp.substr(tmp.size() - 3);
+
+			result += std::to_string(this->accessRights);
+
+			result += this->data;
+			int remaining = 512 - result.length();
+			for (int p = 0; p < remaining; p++)
+				result += '\0';
+
+			return result;
+		}
 	};
 
 	struct DataBlock {
 		unsigned int back;			//3
 		unsigned int next;			//3
 		int reserved;				//2
-		std::string data;			
+		std::string data;
+
+		std::string getString()
+		{
+			std::string result = "";
+			std::string base = "00000000";
+			std::string tmp = "";
+
+			tmp = base + std::to_string(this->back);
+			result += tmp.substr(tmp.size() - 3);
+			tmp = base + std::to_string(this->next);
+			result += tmp.substr(tmp.size() - 3);
+			tmp = base + std::to_string(this->reserved);
+			result += tmp.substr(tmp.size() - 2);
+
+			result += this->data;
+			int remaining = 512 - result.length();
+			for (int p = 0; p < remaining; p++)
+				result += '\0';
+
+
+			return result;
+		}
 	};
 	
 
