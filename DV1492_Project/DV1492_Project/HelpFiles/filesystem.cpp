@@ -1,6 +1,5 @@
 #include "filesystem.h"
-#include <sstream>
-#include <algorithm>
+
 FileSystem::FileSystem() {
 	for (int i = 0; i < 250; i++) block_map[i] = 0;
 
@@ -108,16 +107,140 @@ void FileSystem::initRoot()
 	root.fileSize = 0;
 	root.link = 0;
 	root.accessRights = 0;
-	root.data = "";
+	root.data = "001004";
 
+	this->writeBlock(0, root.getString());
 
-	std::string ddd = this->toString(root);
-	if (mMemblockDevice.writeBlock(0, ddd) == 1)
-		this->block_map[0] = 1;
+	Entry folder;
+	folder.name = "help\x3";
+	folder.blockId = 1;
+	folder.folder = 1;
+	folder.parent = 0;
+	folder.fileSize = 0;
+	folder.link = 0;
+	folder.accessRights = 0;
+	folder.data = "002";
+
+	Entry folder2;
+	folder2.name = "something\x3";
+	folder2.blockId = 2;
+	folder2.folder = 1;
+	folder2.parent = 1;
+	folder2.fileSize = 0;
+	folder2.link = 0;
+	folder2.accessRights = 0;
+	folder2.data = "003";
+
+	Entry folder3;
+	folder3.name = "add\x3";
+	folder3.blockId = 3;
+	folder3.folder = 1;
+	folder3.parent = 2;
+	folder3.fileSize = 0;
+	folder3.link = 0;
+	folder3.accessRights = 0;
+	folder3.data = "";
+
+	Entry folder4;
+	folder4.name = "user\x3";
+	folder4.blockId = 4;
+	folder4.folder = 1;
+	folder4.parent = 0;
+	folder4.fileSize = 0;
+	folder4.link = 0;
+	folder4.accessRights = 0;
+	folder4.data = "005";
+
+	Entry folder5;
+	folder5.name = "porn\x3";
+	folder5.blockId = 5;
+	folder5.folder = 1;
+	folder5.parent = 4;
+	folder5.fileSize = 0;
+	folder5.link = 0;
+	folder5.accessRights = 0;
+	folder5.data = "";
+
+	this->writeBlock(1, folder.getString());
+	this->writeBlock(2, folder2.getString());
+	this->writeBlock(3, folder3.getString());
+	this->writeBlock(4, folder4.getString());
+	this->writeBlock(5, folder5.getString());
+
+	Entry test, wtf, kuk, wat;
+	test = this->readBlock(0);
+	wtf = this->readBlock(3);
+
+	int b1, b2, b3, b4, b5, b6, b7, b8, b9;
+
+	b1 = this->findBlock("./help");
+	b2 = this->findBlock("./help/something");
+	b3 = this->findBlock("./help/something/add");
+	b4 = this->findBlock("./user");
+	b5 = this->findBlock("./user/porn");
+	b6 = this->findBlock("./wat");
+	b7 = this->findBlock("./wat/wat/wat");
+	b8 = this->findBlock(".");
+	//DataBlock nn;
+	//nn.setString("00000200asdasdasdasdasdadasdasd");
+	//
+	//this->writeBlock(1, nn.getString());
+	//
+	//DataBlock nn2;
+	//nn2.setString("00100000cvxcvxcvxcvsdasadasdasdasdasddasdasdadasdasd");
+	//
+	//this->writeBlock(2, nn2.getString());
+
 }
 int FileSystem::findBlock(std::string location)
 {
-	return 0;
+	int blockID = -1;
+	std::vector<std::string> path;
+
+	if (location == ".")
+		return 0;
+	while (location != "")
+	{
+		int loc = location.find_first_of("/");
+		if (loc == -1)
+		{
+			path.push_back(location+"\x3");
+			location = "";
+			break;
+		}
+		else
+			path.push_back(location.substr(0, loc)+"\x3");
+		location = location.substr(loc + 1);
+	}
+
+
+	Entry mover = readBlock(0);
+	bool found = 0;
+	int step = 1;
+	int stop = 0;
+	while (!found)
+	{
+		std::vector<unsigned int> adresses = this->parseFolder(mover.data);
+		int i = 0;
+		while (adresses.size() > i)
+		{
+			Entry test = readBlock(adresses[i++]);
+			if (test.name == path[step])
+			{
+				step++;
+				if (path.size() == step)
+					return test.blockId;
+				mover = test;
+				break;
+			}
+			if (adresses.size() == i)
+				return -1;
+		}
+		
+	}
+
+
+	return blockID;
 }
 
 std::string FileSystem::toString(Entry item){
@@ -199,6 +322,27 @@ void FileSystem::readBlock(std::string block, Entry *entry)
 	//data
 	entry->data = block.substr(i);
 	entry->data.erase(std::remove(entry->data.begin(), entry->data.end(), '\0'), entry->data.end());
+}
+
+FileSystem::Entry FileSystem::readBlock(int block)
+{
+	Entry toRet;
+
+	std::string data = this->mMemblockDevice.readBlock(block).toString();
+
+	toRet.setString(data);
+	int next = toRet.link;
+	
+	while (next != 0)
+	{
+		data = this->mMemblockDevice.readBlock(next).toString();
+		DataBlock toAdd;
+		toAdd.setString(data);
+		toRet.additionalData.push_back(toAdd);
+		next = toAdd.next;
+	}
+
+	return toRet;
 }
 
 void FileSystem::findContentFolder(std::string data, std::vector<int> &ids, std::vector<std::string> &names, std::vector<bool> &folder)
@@ -298,6 +442,32 @@ std::string FileSystem::IdToStr(unsigned int id, unsigned int max_size)
 		num = "0" + num;
 
 	return num;
+}
+
+std::vector<unsigned int> FileSystem::parseFolder(std::string data)
+{
+	std::vector<unsigned int> adress;
+	
+	while (data != "")
+	{
+		std::string tmp = data.substr(0, 3);
+		data = data.substr(3);
+		adress.push_back(std::stoi(tmp));
+		if (data.size() < 3)
+			break;
+	}
+	return adress;
+}
+
+bool FileSystem::writeBlock(unsigned int blockID, std::string blockData)
+{
+	if (mMemblockDevice.writeBlock(blockID, blockData) == 1)
+	{
+		this->block_map[blockID] = 1;
+		return true;
+	}
+	else
+		return false;
 }
 
 

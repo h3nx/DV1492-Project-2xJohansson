@@ -43,6 +43,13 @@ int main(void) {
 	std::string user = "Johansson@DV1492";    // Change this if you want another user to be displayed
 	std::string currentDir = "/";    // current directory, used for output
 
+
+
+	
+
+
+
+
     bool bRun = true;
 	mFileSys = new FileSystem();
 

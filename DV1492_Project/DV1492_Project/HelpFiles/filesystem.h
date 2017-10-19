@@ -2,6 +2,8 @@
 #define FILESYSTEM_H
 
 #include <fstream>
+#include <sstream>
+#include <algorithm>
 #include "memblockdevice.h"
 
 #define NAME_SIZE 64
@@ -12,17 +14,18 @@ class FileSystem
 {
 private:
     // Here you can add your own data structures
-	
+	struct DataBlock;
+	struct Entry;
 
 	struct Entry {					//nr of chars used
-		std::string name;			//64
-		unsigned int blockId;		//3
-		bool folder;				//1
-		unsigned int parent;		//3	
-		unsigned int fileSize;		//8
-		unsigned int link;			//3
-		unsigned int accessRights;	//1
-		std::string data;			//429 (remaining in block)
+		std::string name = "\x3";			//64
+		unsigned int blockId = -1;		//3
+		bool folder = 0;				//1
+		unsigned int parent = 000;		//3	
+		unsigned int fileSize = 0;		//8
+		unsigned int link = 0;			//3
+		unsigned int accessRights = 0;	//1
+		std::string data = "";			//429 (remaining in block)
 		std::string getString()
 		{
 			std::string result = "";
@@ -55,14 +58,56 @@ private:
 
 			return result;
 		}
+		void setString(std::string input)
+		{
+			char name[NAME_SIZE];
+
+			//name
+			int i = 0;
+			this->name = input.substr(0, NAME_SIZE);
+			this->name.erase(std::remove(this->name.begin(), this->name.end(), '\0'), this->name.end());
+			i = NAME_SIZE;
+
+			//blockiD
+			std::string id;
+			this->blockId = std::stoi(input.substr(i, 3));
+			i += 3;
+
+			//folder
+			id = input[i];
+			this->folder = std::stoi(id);
+			i++;
+
+			//parent
+			this->parent = std::stoi(input.substr(i, 3));
+			i += 3;
+
+			//fileSize	
+			this->fileSize = std::stoi(input.substr(i, 8));
+			i += 8;
+
+			//link
+			this->link = std::stoi(input.substr(i, 3));
+			i += 3;
+
+			//accessRights
+			id = input[i];
+			this->accessRights = std::stoi(id);
+			i++;
+
+			//data
+			this->data = input.substr(i);
+			this->data.erase(std::remove(this->data.begin(), this->data.end(), '\0'), this->data.end());
+		}
+
+		std::vector<DataBlock> additionalData;
 	};
 
 	struct DataBlock {
-		unsigned int back;			//3
-		unsigned int next;			//3
-		int reserved;				//2
-		std::string data;
-
+		unsigned int back = 0;			//3
+		unsigned int next = 0;			//3
+		int reserved = 0;				//2
+		std::string data = "";
 		std::string getString()
 		{
 			std::string result = "";
@@ -84,6 +129,22 @@ private:
 
 			return result;
 		}
+		void setString(std::string input)
+		{
+			int i = 0;
+			this->back = std::stoi(input.substr(i, 3));
+			i += 3;
+			this->next = std::stoi(input.substr(i, 3));
+			i += 3;
+			this->reserved = std::stoi(input.substr(i, 3));
+			i += 2;
+
+
+			this->data = input.substr(i);
+			this->data.erase(std::remove(this->data.begin(), this->data.end(), '\0'), this->data.end());
+		}
+	
+
 	};
 	
 
@@ -127,6 +188,7 @@ private:
 	std::string toString(Entry item);
 	std::string toString(DataBlock item);
 	void readBlock(std::string block, Entry *folder);
+	FileSystem::Entry readBlock(int block);
 	//void readFileBlock(std::string block, File *file);
 	void findContentFolder(std::string data, std::vector<int> &ids, std::vector<std::string> &names, std::vector<bool> &folder);
 
@@ -135,6 +197,8 @@ private:
 	bool block_map[250];
  
 	std::string IdToStr(unsigned int id, unsigned int max_size);
+	std::vector<unsigned int> parseFolder(std::string data);
+	bool writeBlock(unsigned int blockID, std::string blockData);
 };
 
 #endif // FILESYSTEM_H
