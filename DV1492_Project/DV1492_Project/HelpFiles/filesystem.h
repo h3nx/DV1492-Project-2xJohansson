@@ -23,6 +23,11 @@ private:
 		unsigned int link;			//3
 		unsigned int accessRights;	//1
 		std::string data;			//429 (remaining in block)
+
+		Entry() { name = "", blockId = 0, folder = 0, parent = 0, fileSize = 0, 
+				link = 0, accessRights = 0, data = ""; }
+		~Entry() {}
+
 		std::string getString()
 		{
 			std::string result = "";
@@ -55,6 +60,7 @@ private:
 
 			return result;
 		}
+
 	};
 
 	struct DataBlock {
@@ -62,6 +68,9 @@ private:
 		unsigned int next;			//3
 		int reserved;				//2
 		std::string data;
+
+		DataBlock() { back = 0, next = 0, reserved = 0, data = ""; }
+		~DataBlock(){}
 
 		std::string getString()
 		{
@@ -105,7 +114,7 @@ public:
     std::string removeFile(std::string path);
 
     /* Removes a folder in the filesystem */
-    std::string removeFolder(std::string path);
+	std::string removeFolder(std::string path);
 
     /* Function will move the current location to a specified location in the filesystem */
     std::string goToFolder(std::string path);
@@ -114,7 +123,8 @@ public:
     std::string listDir(std::string path);
 
     /* Add your own member-functions if needed */
-
+	std::string writeFile(std::string filePath, std::string text);
+	std::string readFile(std::string filePath);
 
 	std::string load(std::string filePath);
 	std::string save(std::string filePath);
@@ -124,11 +134,10 @@ public:
 private:
 	void initRoot();
 	int findBlock(std::string location);
-	std::string toString(Entry item);
-	std::string toString(DataBlock item);
 	void readBlock(std::string block, Entry *folder);
-	//void readFileBlock(std::string block, File *file);
-	void findContentFolder(std::string data, std::vector<int> &ids, std::vector<std::string> &names, std::vector<bool> &folder);
+	void findContentFolder(std::string data, std::vector<int> &ids, std::vector<std::string> &names, std::vector<bool> &folder, std::vector<int> &sizes);
+	std::string remove(std::string path);
+	std::string createEntry(std::string path, bool folder);
 
 private:
 	MemBlockDevice mMemblockDevice;	

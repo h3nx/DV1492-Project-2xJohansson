@@ -24,7 +24,7 @@ std::string help();
 
 std::string format();
 std::string ls(std::string path);
-std::string create(std::string path);
+std::string create(std::string path, std::string text);
 std::string cat(std::string path);
 std::string createImage(std::string path);
 std::string restoreImage(std::string path);
@@ -42,6 +42,7 @@ int main(void) {
 	std::string userCommand, commandArr[MAXCOMMANDS];
 	std::string user = "Johansson@DV1492";    // Change this if you want another user to be displayed
 	std::string currentDir = "/";    // current directory, used for output
+	std::string text;
 
     bool bRun = true;
 	mFileSys = new FileSystem();
@@ -63,10 +64,12 @@ int main(void) {
 				std::cout << format() << std::endl;
                 break;
             case 2: // ls
-                std::cout << "Listing directory:\n" << ls(currentDir) << std::endl;
+                std::cout << "Contents of directory: " << currentDir << "\n" << ls(currentDir) << std::endl;
                 break;
             case 3: // create
-				std::cout << create(commandArr[1]) << std::endl;
+				std::cout << "Enter text: ";
+				getline(std::cin, text);
+				std::cout << create(currentDir + commandArr[1], text) << std::endl;
                 break;
             case 4: // cat
 				std::cout << cat(commandArr[1]) << std::endl;
@@ -90,7 +93,7 @@ int main(void) {
 				//std::cout << mv() << std::endl;
                 break;
             case 11: // mkdir
-				std::cout << mkDir(commandArr[1]) << std::endl;
+				std::cout << mkDir(currentDir + commandArr[1]) << std::endl;
                 break;
             case 12: // cd
 				std::cout << cd(commandArr[1]) << std::endl;
@@ -170,17 +173,17 @@ std::string ls(std::string path)
 {	
 	return mFileSys->listDir(path);
 }
-std::string create(std::string path)
+std::string create(std::string path, std::string text)
 {
-	std::string response = "";
-
+	std::string response = mFileSys->createFile(path);
+	if (response == "file created") {
+		response += ", " + mFileSys->writeFile(path, text);
+	}
 	return response;
 }
 std::string cat(std::string path)
 {
-	std::string response = "";
-
-	return response;
+	return mFileSys->readFile(path);
 }
 std::string createImage(std::string path)
 {
@@ -199,10 +202,8 @@ std::string restoreImage(std::string path)
 		return toRet;
 }
 std::string rm(std::string path)
-{
-	std::string response = "";
-
-	return response;
+{	
+	return mFileSys->removeFile(path);
 }
 std::string cp(std::string source, std::string destination)
 {
