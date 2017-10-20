@@ -42,7 +42,7 @@ int main(void) {
 	std::string userCommand, commandArr[MAXCOMMANDS];
 	std::string user = "Johansson@DV1492";    // Change this if you want another user to be displayed
 	std::string currentDir = "./";    // current directory, used for output
-	std::string text;
+	std::string inputText;
 
 
 
@@ -75,8 +75,8 @@ int main(void) {
                 break;
             case 3: // create
 				std::cout << "Enter text: ";
-				getline(std::cin, text);
-				std::cout << create(currentDir + commandArr[1], text) << std::endl;
+				getline(std::cin, inputText);
+				std::cout << create(currentDir + commandArr[1], inputText) << std::endl;
                 break;
             case 4: // cat
 				std::cout << cat(currentDir + commandArr[1]) << std::endl;
@@ -88,10 +88,10 @@ int main(void) {
 				std::cout << restoreImage(commandArr[1]) << std::endl;
                 break;
             case 7: // rm
-				std::cout << rm(commandArr[1]) << std::endl;
+				std::cout << rm(currentDir + commandArr[1]) << std::endl;
                 break;
             case 8: // cp
-				std::cout << cp(commandArr[1], commandArr[2]) << std::endl;
+				std::cout << cp(commandArr[1], currentDir + commandArr[2]) << std::endl;
                 break;
             case 9: // append
 				//std::cout << append() << std::endl;
@@ -214,9 +214,11 @@ std::string rm(std::string path)
 }
 std::string cp(std::string source, std::string destination)
 {
-	std::string response = "";
+	std::string src = mFileSys->readFile("." + source);
+	if (src == ("file not found"))
+		return src;
 
-	return response;
+	return create(destination, src);
 }
 std::string append(std::string source, std::string destination)
 {
