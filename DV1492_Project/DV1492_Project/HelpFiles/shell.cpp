@@ -33,7 +33,7 @@ std::string cp(std::string source, std::string destination);
 std::string append(std::string source, std::string destination);
 std::string mv(std::string oldFile, std::string newFile);
 std::string mkDir(std::string directory);
-std::string cd(std::string directory);
+std::string cd(std::string directory, std::string &current);
 std::string pwd();
 
 
@@ -41,7 +41,7 @@ int main(void) {
 
 	std::string userCommand, commandArr[MAXCOMMANDS];
 	std::string user = "Johansson@DV1492";    // Change this if you want another user to be displayed
-	std::string currentDir = "./";    // current directory, used for output
+	std::string currentDir = ".";    // current directory, used for output
 	std::string inputText;
 
 
@@ -76,10 +76,10 @@ int main(void) {
             case 3: // create
 				std::cout << "Enter text: ";
 				getline(std::cin, inputText);
-				std::cout << create(currentDir + commandArr[1], inputText) << std::endl;
+				std::cout << create(currentDir + "/"+commandArr[1], inputText) << std::endl;
                 break;
             case 4: // cat
-				std::cout << cat(currentDir + commandArr[1]) << std::endl;
+				std::cout << cat(currentDir + "/" + commandArr[1]) << std::endl;
                 break;
             case 5: // createImage
 				std::cout << createImage(commandArr[1]) << std::endl;
@@ -88,7 +88,7 @@ int main(void) {
 				std::cout << restoreImage(commandArr[1]) << std::endl;
                 break;
             case 7: // rm
-				std::cout << rm(currentDir + commandArr[1]) << std::endl;
+				std::cout << rm(currentDir + "/" + commandArr[1]) << std::endl;
                 break;
             case 8: // cp
 				std::cout << cp(commandArr[1], currentDir + commandArr[2]) << std::endl;
@@ -100,13 +100,13 @@ int main(void) {
 				//std::cout << mv() << std::endl;
                 break;
             case 11: // mkdir
-				std::cout << mkDir(currentDir + commandArr[1]) << std::endl;
+				std::cout << mkDir(currentDir + "/"+ commandArr[1]) << std::endl;
                 break;
             case 12: // cd
-				std::cout << cd(commandArr[1]) << std::endl;
+				std::cout << cd("/" + commandArr[1],currentDir) << std::endl;
                 break;
             case 13: // pwd
-				std::cout << pwd() << std::endl;
+				std::cout << currentDir << std::endl;
                 break;
             case 14: // help
                 std::cout << help() << std::endl;
@@ -178,6 +178,7 @@ std::string format()
 }
 std::string ls(std::string path)
 {	
+
 	return mFileSys->listDir(path);
 }
 std::string create(std::string path, std::string text)
@@ -236,9 +237,19 @@ std::string mkDir(std::string directory)
 {
 	return mFileSys->createFolder(directory);	
 }
-std::string cd(std::string directory)
+std::string cd(std::string directory, std::string &current)
 {
 	std::string response = "";
+	if (mFileSys->goToFolder(current+directory) == "found")
+	{
+		current = current+directory;
+		response = current + " found";
+
+	}
+	else 
+		response = directory + " not found";
+
+
 
 	return response;
 }

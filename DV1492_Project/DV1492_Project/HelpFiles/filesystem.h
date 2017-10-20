@@ -186,21 +186,18 @@ public:
 private:
 	void initRoot();
 	int findBlock(std::string location);
-	void readBlock(std::string block, Entry *folder);
 	void findContentFolder(std::string data, std::vector<int> &ids, std::vector<std::string> &names, std::vector<bool> &folder, std::vector<int> &sizes);
 	std::string remove(std::string path);
 	std::string createEntry(std::string path, bool folder);
 	FileSystem::Entry readBlock(int block);
-	//void readFileBlock(std::string block, File *file);
-	void findContentFolder(std::string data, std::vector<int> &ids, std::vector<std::string> &names, std::vector<bool> &folder);
+	std::string IdToStr(unsigned int id, unsigned int max_size);
+	std::vector<unsigned int> parseFolder(std::string data);
+	bool writeBlock(unsigned int blockID, std::string blockData);
 
 private:
 	MemBlockDevice mMemblockDevice;	
 	bool block_map[250];
  
-	std::string IdToStr(unsigned int id, unsigned int max_size);
-	std::vector<unsigned int> parseFolder(std::string data);
-	bool writeBlock(unsigned int blockID, std::string blockData);
 };
 
 #endif // FILESYSTEM_H
