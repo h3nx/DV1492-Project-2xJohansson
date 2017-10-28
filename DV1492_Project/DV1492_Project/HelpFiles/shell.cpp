@@ -69,6 +69,7 @@ int main(void) {
                 break;
             case 1: // format
 				std::cout << format() << std::endl;
+				currentDir = ".";
                 break;
             case 2: // ls
                 std::cout << "Contents of directory: " << currentDir << "\n" << ls(currentDir) << std::endl;
