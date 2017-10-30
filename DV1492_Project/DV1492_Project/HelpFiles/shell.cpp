@@ -104,7 +104,7 @@ int main(void) {
 				std::cout << mkDir(currentDir + "/"+ commandArr[1]) << std::endl;
                 break;
             case 12: // cd
-				std::cout << cd("/" + commandArr[1],currentDir) << std::endl;
+				std::cout << cd(commandArr[1],currentDir) << std::endl;
                 break;
             case 13: // pwd
 				std::cout << currentDir << std::endl;
@@ -241,10 +241,21 @@ std::string mkDir(std::string directory)
 std::string cd(std::string directory, std::string &current)
 {
 	std::string response = "";
-	if (mFileSys->goToFolder(current+directory) == "found")
+		
+	int count = 0;
+	for (int i = directory.size() - 1; i >= 0; i--) 
+		if (directory[i] == '/') count++;
+
+	if (count == 0) 
+		directory = current + "/" + directory;
+
+	if (directory.size() == 1) 
+		directory = ".";
+	
+	if (mFileSys->goToFolder(directory) == "found")
 	{
-		current = current+directory;
-		response = current + " found";
+		current = directory;
+		response = directory + " found";
 
 	}
 	else 
