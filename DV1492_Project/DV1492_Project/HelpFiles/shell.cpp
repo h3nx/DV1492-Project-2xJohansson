@@ -92,7 +92,7 @@ int main(void) {
 				std::cout << rm(currentDir + "/" + commandArr[1]) << std::endl;
                 break;
             case 8: // cp
-				std::cout << cp(commandArr[1], currentDir + "/" + commandArr[2]) << std::endl;
+				std::cout << cp(currentDir + "/" + commandArr[1], currentDir + "/" + commandArr[2]) << std::endl;
                 break;
             case 9: // append
 				//std::cout << append() << std::endl;
@@ -216,7 +216,7 @@ std::string rm(std::string path)
 }
 std::string cp(std::string source, std::string destination)
 {
-	std::string src = mFileSys->readFile("/" + source);
+	std::string src = mFileSys->readFile(source);
 	if (src == ("file not found"))
 		return src;
 
